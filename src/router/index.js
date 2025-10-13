@@ -5,6 +5,8 @@ import App from '../App';
 import NotFoundPage from "../pages/layouts/NotFoundPage";
 import Index from "../pages/blogs/Index";
 import BlogCreate from "../pages/blogs/BlogCreate";
+import BlogEdit from "../pages/blogs/BlogEdit";
+import BlogDetails from "../pages/blogs/BlogDetails";
 
 const router = createBrowserRouter([
   {
@@ -22,8 +24,16 @@ const router = createBrowserRouter([
         element: <Index />
       },
       {
+        path: "/blogs/:id",
+        element: <BlogDetails />
+      },
+      {
         path: "/blogs/create",
         element: <BlogCreate />
+      },
+      {
+        path: "/blogs/:id/edit",
+        element: <BlogEdit />
       },
       {
         path: '*',

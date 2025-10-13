@@ -1,55 +1,62 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { generatePath, Link, useNavigate } from "react-router-dom";
+import {toast} from 'react-toastify';
 import Breadcrumb from "../../components/Breadcrumb";
 import { API_BASE_URL } from "../../config";
 
 export default function BlogCreate() {
-    const navigate = useNavigate();
-    const [formData, setFormData] = useState({ title: '', description: '' });
-    const [loading, setLoading] = useState(false);
-    const [errors, setErrors] = useState({});
+    let navigate = useNavigate();
+    let [loading, setLoading] = useState(false);
+    let [errors, setErrors] = useState({});
+    let [generalError, setGeneralError] = useState('');
+    let [showGeneralError, setShowGeneralError] = useState(false);
 
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+    let [formData, setFormData] = useState({
+        title: '',
+        description: ''
+    })
+    let handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        })
+    }
 
-    const handleSubmit = async (e) => {
+    let handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        // setErrors('');
+        setErrors({});
+        setGeneralError('');
+        setShowGeneralError(false);
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/blogs`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json' // Important: Laravel returns JSON validation errors
-                },
-                body: JSON.stringify(formData)
-            });
+        let response = await fetch(`${API_BASE_URL}/blogs`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                "Accept": 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
 
-            const data = await response.json();
+        let data = await response.json();
 
-            if (response.ok) {
-                // Success
-                navigate('/blogs', { state: { showToast: true } });
-            } else if (response.status === 422 && data.errors) {
-                // Validation errors
-                // const errors = Object.values(data.errors).flat().join(', ');
-                setErrors(data.errors);
-            } else {
-                // Other API errors
-                setErrors(data.message || 'Something went wrong');
-            }
-        } catch (err) {
-            // Network error
-            console.error('Fetch error:', err);
-            setErrors('Network error: ' + err.message);
-        } finally {
+
+        if (response.ok) {
+            toast.success("Blog created successfully");
+            navigate('/blogs');
+        } else if (response.status === 422 && data.errors) {
+            setErrors(data.errors);
+            setLoading(false);
+        } else {
+            setGeneralError("An error occurred");
+            setShowGeneralError(true);
             setLoading(false);
         }
-    };
+
+
+    }
+
 
     return (
         <div className="col-md-8 offset-md-2">
@@ -61,36 +68,38 @@ export default function BlogCreate() {
             <div className="d-flex-row justify-content-center">
                 <div className="card shadow p-4">
                     <h1 className="text-center">Create Blog</h1>
-                    {/* {error && <div className="alert alert-danger">{error}</div>} */}
+                    {showGeneralError && generalError && <div className="alert alert-warning alert-dismissible fade show" role="alert">
+                        <strong>{ generalError }</strong>
+                        <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close" onClick={() => setShowGeneralError(false)}></button>
+                    </div>}
+                    {/* {error && <div className="alert alert-danger">{typeof error === 'string' ? error : error.message || error.error || 'An error occurred'}</div>} */}
                     <form onSubmit={handleSubmit}>
                         <div className="form-group my-3">
                             <label htmlFor="title">Title</label>
-                            <input 
-                                className="form-control" 
-                                type="text" 
-                                name="title" 
-                                id="title" 
-                                value={formData.title}
+                            <input
+                                className="form-control"
+                                type="text"
+                                name="title"
+                                id="title"
                                 onChange={handleChange}
                             />
-                            {errors.title && <small className="text-danger">{errors.title[0]}</small>}
+                            {errors.title && <div className="text-danger">{errors.title}</div>}
                         </div>
                         <div className="form-group my-3">
                             <label htmlFor="description">Description</label>
-                            <textarea 
-                                name="description" 
-                                id="description" 
-                                rows={7} 
+                            <textarea
+                                name="description"
+                                id="description"
+                                rows={7}
                                 className="form-control"
-                                value={formData.description}
                                 onChange={handleChange}
                             ></textarea>
-                            {errors.description && <small className="text-danger">{errors.description[0]}</small>}  
+                            {errors.description && <div className="text-danger">{errors.description}</div>}
                         </div>
                         <div className="d-flex justify-content-end gap-2">
                             <Link to="/blogs"><button className="btn btn-dark" type="button">Back</button></Link>
                             <button className="btn btn-primary" type="submit" disabled={loading}>
-                                {loading ? 'Creating...' : 'Submit'}
+                                {loading ? 'Submitting...' : 'Submit'}
                             </button>
                         </div>
                     </form>

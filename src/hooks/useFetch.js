@@ -35,7 +35,26 @@ function useFetch(url) {
 
         }, [url]);
 
-        return { data , loading, error };
+        let refetch = () => {
+            // setLoading(true);
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) {
+                        throw Error('Something went wrong');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    setData(data);
+                    setLoading(false);
+                })
+                .catch(e => {
+                    setError(e.message);
+                    setLoading(false);
+                })
+        };
+
+        return { data , loading, error, refetch };
 
 }
 
