@@ -5,54 +5,60 @@ import Loader from '../../components/Loader';
 import Breadcrumb from '../../components/Breadcrumb';
 
 export default function BlogDetails() {
-  let { id } = useParams();
-  let navigate = useNavigate();
-  const [blog, setBlog] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  let {id} = useParams();
+  let [blog, setBlog] = useState(null);
+  let [loading, setLoading] = useState(false);
+  let [errors, setErrors] = useState({});
 
+  let navigate = useNavigate();
   let url = `${API_BASE_URL}/blogs/${id}`;
 
-  useEffect(() => {
-    const fetchBlogDetails = async () => {
+  useEffect (() => {
+    async function fetchBlog() {
+      // setErrors({});
       setLoading(true);
-      setError(null);
       try {
-        let response = await fetch(url);
-        if (response.status === 404) {
-          navigate('/404');
-          return;
-        }
+        let response = await fetch(url)
         if (!response.ok) {
-          throw new Error('Failed to fetch blog details');
+          throw new Error('Failed to fetch blog');
+        } else if (response.status === 404) {
+          navigate('/404');
         }
+
         let data = await response.json();
-        setBlog(data.data);
+        if (data) {
+          setBlog(data.data);
+          // console.log(data.data);
+          setLoading(false);
+          setErrors({});
+        }
       } catch (error) {
-        console.error("Error fetching blog details:", error);
-        setError(error.message);
+        console.error('Error fetching blog:', error);
+        setErrors({ fetch: 'Failed to fetch blog details' });
       } finally {
         setLoading(false);
       }
-    };
+    }
 
-    fetchBlogDetails();
+    fetchBlog();
   }, [url, navigate]);
-
 
   return (
     <div>
-      {loading && <Loader />}
-      {error && <div className="alert alert-danger">{error}</div>}
-      {blog && <>
+      
         <Breadcrumb items={[
           { label: 'Home', path: '/' },
           { label: 'Blogs', path: '/blogs' },
           { label: 'Details' },
         ]} />
-        <h1>{blog.title}</h1>
-        <p>{blog.description}</p>
-      </>}
+        
+        {loading && <Loader />}
+        { errors.fetch && <h2 className='text-danger'>{ errors.fetch }</h2> }
+        {!errors.fetch && !loading && blog && <div>
+          <h2>{blog.title}</h2>  
+          <p>{blog.description}</p>
+        </div>}
+      
     </div>
   )
 }

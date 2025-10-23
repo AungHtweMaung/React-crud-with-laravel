@@ -1,33 +1,36 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { API_BASE_URL } from '../../config';
 import { toast } from 'react-toastify';
 
-export default function Blog({ blog, index, onDelete }) {
-
+export default function Blog({ blog, index, refetchBlog }) {
     let [deleting, setDeleting] = useState(false);
+    let url = `${API_BASE_URL}/blogs/${blog.id}`;
 
     let deleteData = async () => {
-        if (window.confirm("Are you sure to delete?")) {
-            setDeleting(true);
+        setDeleting(true);
+        if (window.confirm('Are you srue to delete?')) {
             try {
-                let response = await fetch(`${API_BASE_URL}/blogs/${blog.id}`, {
-                    method: 'DELETE',
+                let response = await fetch(url, {
+                    method: 'DELETE'
                 });
+
                 if (!response.ok) {
-                    throw new Error('Failed to delete blog');
+                    toast.error('Fail to delete');
+                    throw new Error('Failed to delete');
                 }
                 let data = await response.json();
-                toast.success('Blog deleted successfully!');
-                onDelete(blog.id); // Call the onDelete callback to update the list
+                toast.success('Deleted Successfully');
+                refetchBlog();
+
             } catch (error) {
-                console.error('Error deleting blog:', error);
-                toast.error('Failed to delete blog');
+                console.error("Fail to delete: ", error)
             } finally {
                 setDeleting(false);
             }
         }
     }
+
 
     return (
         <tr key={blog.id}>
@@ -42,7 +45,7 @@ export default function Blog({ blog, index, onDelete }) {
                     <button className="btn btn-sm btn-primary mx-1">Edit</button>
                 </Link>
                 <button className="btn btn-sm btn-danger mx-1" onClick={deleteData} disabled={deleting}>
-                    {deleting ? 'Deleting...' : 'Delete'}
+                    {deleting ? 'Deleting' : 'Delete'}
                 </button>
             </td>
         </tr>
